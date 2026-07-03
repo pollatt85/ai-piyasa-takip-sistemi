@@ -11,6 +11,7 @@ $router->post('/signals/{id}/favorite', 'SignalController@favorite');
 $router->post('/signals/{id}/score', 'SignalController@score');
 $router->post('/signals/{id}/to-project', 'SignalController@toProject');
 $router->post('/signals/{id}/delete', 'SignalController@destroy');
+$router->post('/signals/{id}/translate', 'SignalController@translate');
 
 $router->get('/projects', 'ProjectController@index');
 $router->post('/projects', 'ProjectController@store');

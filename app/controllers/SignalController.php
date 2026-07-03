@@ -79,4 +79,11 @@ class SignalController extends Controller
         flash('Sinyal silindi.');
         $this->redirect('signals');
     }
+
+    /** TR çeviri butonu (AJAX) — MyMemory API, ücretsiz/key'siz. */
+    public function translate(int $id): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode((new Signal())->translate($id), JSON_UNESCAPED_UNICODE);
+    }
 }

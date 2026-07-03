@@ -95,7 +95,7 @@
             <tr><td colspan="10" class="page-sub">Kayıt yok. Tarama başlat veya manuel sinyal ekle.</td></tr>
         <?php endif; ?>
         <?php foreach ($signals as $s): ?>
-            <tr>
+            <tr data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
                 <td>
                     <form class="inline-form" method="post" action="<?= url('signals/' . $s['id'] . '/favorite') ?>">
                         <input type="hidden" name="back" value="signals">
@@ -104,14 +104,17 @@
                 </td>
                 <td style="max-width:340px">
                     <?php if ($s['source_url']): ?>
-                        <a href="<?= e($s['source_url']) ?>" target="_blank" rel="noopener" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 90)) ?></a>
+                        <a href="<?= e($s['source_url']) ?>" target="_blank" rel="noopener" title="<?= e($s['content']) ?>" class="js-signal-text"><?= e(mb_substr($s['content'], 0, 90)) ?></a>
                     <?php else: ?>
-                        <span title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
+                        <span title="<?= e($s['content']) ?>" class="js-signal-text"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
                     <?php endif; ?>
                 </td>
                 <td><?= e($s['sector_name'] ?? '—') ?><br><small class="page-sub"><?= e($s['sub_sector_name'] ?? '') ?></small></td>
                 <td><span class="badge badge-source"><?= e($s['source']) ?></span></td>
-                <td><span class="badge badge-<?= strtolower($s['region']) ?>"><?= e($s['region']) ?></span></td>
+                <td>
+                    <span class="badge badge-<?= strtolower($s['region']) ?>"><?= e($s['region']) ?></span>
+                    <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
+                </td>
                 <td><?= $s['repeat_count'] ?>× / <?= $s['source_variety'] ?> kaynak</td>
                 <td><span class="badge badge-score"><?= $s['score'] ?></span></td>
                 <td><span class="badge badge-<?= e($s['status']) ?>"><?= $s['status'] === 'olgun_firsat' ? 'olgun fırsat' : 'ham' ?></span></td>

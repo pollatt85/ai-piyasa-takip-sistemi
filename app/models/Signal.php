@@ -5,6 +5,44 @@ class Signal extends Model
 {
     protected string $table = 'signals';
 
+    // --- Çeviri (MyMemory API, ücretsiz/key'siz) ---
+
+    public function translate(int $id): array
+    {
+        $row = $this->find($id);
+        if ($row === null) {
+            return ['ok' => false, 'error' => 'not_found'];
+        }
+        if (!empty($row['content_tr'])) {
+            return ['ok' => true, 'text' => $row['content_tr']];
+        }
+        $translated = $this->callMyMemory((string) $row['content']);
+        if ($translated === null) {
+            return ['ok' => false, 'error' => 'service_unavailable'];
+        }
+        $this->update($id, ['content_tr' => $translated]);
+        return ['ok' => true, 'text' => $translated];
+    }
+
+    private function callMyMemory(string $text): ?string
+    {
+        $url = 'https://api.mymemory.translated.net/get?' . http_build_query([
+            'q' => $text,
+            'langpair' => 'en|tr',
+        ]);
+        $ctx = stream_context_create(['http' => [
+            'timeout' => 10,
+            'user_agent' => 'Mozilla/5.0 (PiyasaTakip/1.0; localhost)',
+        ]]);
+        $raw = @file_get_contents($url, false, $ctx);
+        if ($raw === false) {
+            return null;
+        }
+        $data = json_decode($raw, true);
+        $translated = $data['responseData']['translatedText'] ?? null;
+        return is_string($translated) && $translated !== '' ? $translated : null;
+    }
+
     // --- Skor (bkz. MD/docs/03-analiz-siniflandirma.md) ---
 
     public function computeScore(int $repeat, int $variety, int $manual): int

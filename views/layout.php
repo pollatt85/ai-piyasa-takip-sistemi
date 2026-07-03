@@ -23,6 +23,10 @@ $flashData = flash();
 <div class="app">
     <aside class="sidebar">
         <div class="brand">📡 <span>Piyasa Takip</span></div>
+        <form method="post" action="<?= url('scan/run') ?>" class="sidebar-scan">
+            <button type="submit" class="btn btn-primary btn-block">⟳ Tarama Başlat</button>
+            <p class="scan-note">RSS + Reddit (ücretsiz kaynaklar)</p>
+        </form>
         <nav>
             <?php foreach ($nav as $seg => [$label, $icon]):
                 $isActive = $seg === ''
@@ -34,10 +38,6 @@ $flashData = flash();
             </a>
             <?php endforeach; ?>
         </nav>
-        <form method="post" action="<?= url('scan/run') ?>" class="sidebar-scan">
-            <button type="submit" class="btn btn-primary btn-block">⟳ Tarama Başlat</button>
-            <p class="scan-note">RSS + Reddit (ücretsiz kaynaklar)</p>
-        </form>
     </aside>
     <main class="main">
         <?php if ($flashData !== null): ?>
@@ -46,5 +46,7 @@ $flashData = flash();
         <?= $content ?>
     </main>
 </div>
+<script>window.APP_BASE_URL = <?= json_encode(rtrim(url(''), '/'), JSON_UNESCAPED_SLASHES) ?>;</script>
+<script src="<?= url('assets/js/app.js') ?>" defer></script>
 </body>
 </html>

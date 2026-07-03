@@ -43,11 +43,12 @@
             <p class="page-sub">Bu aralıkta sinyal yok. Soldan tarama başlatabilirsin.</p>
         <?php endif; ?>
         <?php foreach ($newSignals as $s): ?>
-        <div class="signal-item">
+        <div class="signal-item" data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
             <div class="signal-body">
-                <span class="signal-content" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
+                <span class="signal-content js-signal-text" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
                 <div class="signal-meta">
                     <span class="badge badge-<?= strtolower($s['region']) ?>"><?= e($s['region']) ?></span>
+                    <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
                     <span class="badge badge-source"><?= e($s['source']) ?></span>
                     <span class="badge badge-score">skor <?= $s['score'] ?></span>
                     <span class="time"><?= timeAgo($s['created_at']) ?></span>
@@ -63,12 +64,13 @@
             <p class="page-sub">Henüz olgunlaşan fırsat yok. Skor eşiği: <?= config()['score']['threshold'] ?>.</p>
         <?php endif; ?>
         <?php foreach ($matureSignals as $s): ?>
-        <div class="signal-item">
+        <div class="signal-item" data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
             <div class="signal-body">
-                <span class="signal-content" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 80)) ?></span>
+                <span class="signal-content js-signal-text" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 80)) ?></span>
                 <div class="signal-meta">
                     <span class="badge badge-score">skor <?= $s['score'] ?></span>
                     <span class="badge badge-<?= strtolower($s['region']) ?>"><?= e($s['region']) ?></span>
+                    <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
                     <?php if ($s['sector_name']): ?><span class="badge badge-source"><?= e($s['sector_name']) ?></span><?php endif; ?>
                 </div>
             </div>
@@ -94,12 +96,13 @@
             <p class="page-sub">Favori fırsat yok. Fırsat kartındaki ★ ile ekleyebilirsin.</p>
         <?php endif; ?>
         <?php foreach ($favorites as $s): ?>
-        <div class="signal-item">
+        <div class="signal-item" data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
             <div class="signal-body">
-                <span class="signal-content"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
+                <span class="signal-content js-signal-text"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
                 <div class="signal-meta">
                     <span class="badge badge-score">skor <?= $s['score'] ?></span>
                     <span class="badge badge-<?= e($s['status']) ?>"><?= $s['status'] === 'olgun_firsat' ? 'olgun fırsat' : 'ham' ?></span>
+                    <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
                 </div>
             </div>
             <div class="signal-actions">

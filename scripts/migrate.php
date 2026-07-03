@@ -43,6 +43,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS signals (
     source TEXT NOT NULL DEFAULT 'manuel',
     source_url TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL,
+    content_tr TEXT,
     content_hash TEXT NOT NULL UNIQUE,
     region TEXT NOT NULL DEFAULT 'TR',
     repeat_count INTEGER NOT NULL DEFAULT 1,
@@ -89,6 +90,13 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS logs (
     ref_id INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 )");
+
+// --- Mevcut DB'ler için idempotent kolon eklemeleri (ALTER ... IF NOT EXISTS yok) ---
+$signalCols = array_column($pdo->query("PRAGMA table_info(signals)")->fetchAll(), 'name');
+if (!in_array('content_tr', $signalCols, true)) {
+    $pdo->exec('ALTER TABLE signals ADD COLUMN content_tr TEXT');
+    echo "signals.content_tr kolonu eklendi.\n";
+}
 
 // --- Seed: başlangıç hiyerarşisi (yalnızca boşsa) ---
 $count = (int) $pdo->query('SELECT COUNT(*) FROM categories')->fetchColumn();
