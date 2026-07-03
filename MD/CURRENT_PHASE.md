@@ -1,41 +1,43 @@
 # CURRENT_PHASE — Aktif Faz Durumu
 
 > Her session başında **MASTER.md ile birlikte** bu dosya yüklenir. Sistemin şu an
-> hangi fazda olduğunu ve o fazda ne yapılacağını tek yerde tutar. Faz değiştikçe
+> hangi fazda olduğunu ve o fazda ne yapılacakları tek yerde tutar. Faz değiştikçe
 > bu dosya güncellenir; eski durum [CHANGELOG.md](CHANGELOG.md) içine taşınır.
 
 ---
 
-## Aktif Faz: **Faz 0 — Kurulum**
+## Aktif Faz: **Faz 9 — Polish & Hosting Hazırlığı**
 
-**Durum:** Başlamaya hazır (MD yapısı tamamlandı, kod henüz yok).
+**Durum:** Faz 0–8 tamamlandı (2026-07-03). Sistem localhost'ta uçtan uca çalışıyor.
 
-### Bu Fazın Amacı
-Projenin iskeletini kurmak. Henüz iş mantığı yok; sadece üzerine inşa edilecek zemin.
+### Çalışan Sistem (özet)
+- Hafif MVC: `public/index.php` → `Router` → controller → view (framework yok)
+- SQLite: `data/app.sqlite`, 9 tablo (`scripts/migrate.php` ile kurulur)
+- Tarama: `scripts/scan.php` (CLI) veya dashboard "Tarama Başlat" — RSS + Reddit RSS
+- Sınıflandırma: **kural tabanlı** (alt sektör anahtar kelimeleri) — Claude API ücretli
+  olduğundan bilinçli olarak kullanılmıyor; sistem %100 ücretsiz kaynakla çalışıyor
+- Skor/eşik `app/config.php` içinde; eşiği aşan sinyal `olgun_firsat`
+- Dashboard: özet kartları, Fırsat Radarı, Favoriler, sektör haritası + Chart.js
+  grafikler, Kanban, görev/tik özeti, aktivite akışı
 
-### Yapılacaklar (Faz 0 kapsamı)
-- [ ] Klasör yapısı: `public/`, `app/` (controllers, models, core), `views/`, `data/`, `routes/`
-- [ ] SQLite bağlantısı: tek dosya `data/app.sqlite`, PDO ile bağlantı sınıfı
-- [ ] Hafif MVC iskeleti: `Router`, `Controller` taban sınıfı, `Model` taban sınıfı
-- [ ] Routing: `public/index.php` tek giriş noktası (front controller)
-- [ ] Basit bir test route'u (örn. `/` → "çalışıyor" yanıtı) ile iskeletin doğrulanması
+### Kurulum (yeni makine)
+```
+php scripts/migrate.php   # tabloları + başlangıç hiyerarşisini kurar
+php scripts/scan.php      # ilk taramayı çalıştırır (opsiyonel)
+```
+XAMPP Apache ile: `http://localhost/ai-piyasa-takip-sistemi/` (kök .htaccess public/'e yönlendirir)
+veya: `php -S localhost:8123 -t public public/router.php`
 
-### Bu Fazın Kapsam DIŞI
-- Tablo oluşturma / migration → **Faz 1**
-- Herhangi bir CRUD, tarama, dashboard → sonraki fazlar
+### Faz 9 Kalanlar
+- [ ] Hosting'e taşıma provası (paylaşımlı hosting'de .htaccess + SQLite yolu)
+- [ ] Zamanlanmış tarama: Windows Görev Zamanlayıcı'ya `php scripts/scan.php` tanımı
+- [ ] Feed listesini genişletme / ince ayar (`app/config.php` → `feeds`)
+- [ ] Skor ağırlıklarını gerçek veriyle kalibre etme
+
+### Kapsam DIŞI (bkz. docs/09-genisleme-potansiyeli.md)
+- Ücretli API'ler (Claude, Google Maps, Custom Search) — kullanıcı kararıyla atlandı
+- Mobil uygulama, bildirim, multi-user
 
 ### İlgili Belgeler
-- Mimari/kod kuralları: [CODING_STANDARD.md](CODING_STANDARD.md)
 - Genel referans: [MASTER.md](MASTER.md)
-
-### Önerilen Model
-İskelet kurma tekrarlayan/mekanik iş → **hızlı/ucuz model** yeterli.
-Mimari karar gerekiyorsa güçlü modele geç (bkz. [AI_RULES.md](AI_RULES.md)).
-
----
-
-## Faz Geçiş Kuralı
-Faz 0 tamamlanınca:
-1. Yapılanları [CHANGELOG.md](CHANGELOG.md) içine işle.
-2. Bu dosyayı **Faz 1 — Veritabanı & Modeller** olarak güncelle.
-3. Yeni session aç; MASTER + bu dosya + [docs/06-veritabani-semasi.md](docs/06-veritabani-semasi.md) yükle.
+- Kod kuralları: [CODING_STANDARD.md](CODING_STANDARD.md)
