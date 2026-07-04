@@ -6,7 +6,7 @@ class ScanController extends Controller
     /** Dashboard "Tarama Başlat" aksiyonu. Tarama DB'ye yazar, arayüz okur. */
     public function run(): void
     {
-        set_time_limit(180);
+        set_time_limit(max(180, count(config()['feeds']) * 20));
         if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch') {
             $this->runStreaming();
             return;

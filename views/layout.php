@@ -6,6 +6,7 @@ $nav = [
     'signals' => ['Sinyaller', '⚡'],
     'projects' => ['Projeler', '▤'],
     'market' => ['Piyasa Haritası', '◉'],
+    'kaynaklar' => ['Kaynaklar', '📚'],
     'logs' => ['Aktiviteler', '≡'],
 ];
 $flashData = flash();
@@ -34,7 +35,7 @@ $flashData = flash();
         <nav>
             <?php foreach ($nav as $seg => [$label, $icon]):
                 $isActive = $seg === ''
-                    ? !preg_match('#/(signals|projects|market|logs)#', $reqPath)
+                    ? !preg_match('#/(signals|projects|market|kaynaklar|logs)#', $reqPath)
                     : (bool) preg_match('#/' . $seg . '(/|$)#', $reqPath);
             ?>
             <a href="<?= url($seg) ?>" class="<?= $isActive ? 'active' : '' ?>">

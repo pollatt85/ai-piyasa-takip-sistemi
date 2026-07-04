@@ -43,5 +43,55 @@ return [
         ['url' => 'https://www.technopat.net/sosyal/forums/-/index.rss', 'source' => 'technopat', 'region' => 'TR'],
         ['url' => 'https://forum.shiftdelete.net/forums/-/index.rss',    'source' => 'sdn-forum', 'region' => 'TR'],
         ['url' => 'https://forum.alomaliye.com/forums/-/index.rss',      'source' => 'alomaliye', 'region' => 'TR'],
+        // Türkiye — meslek forumları (2026-07-04 tarihinde tek tek RSS doğrulaması yapıldı)
+        ['url' => 'https://www.hukuki.net/external.php?type=RSS2',                 'source' => 'hukuki-net',      'region' => 'TR'],
+        ['url' => 'https://mediforum.net/syndication.php?fid=68',                  'source' => 'mediforum',       'region' => 'TR'],
+        ['url' => 'https://www.drtus.com/forum/app.php/feed/forum/51',             'source' => 'drtus',           'region' => 'TR'],
+        ['url' => 'https://www.doktorforum.com.tr/forums/-/index.rss',             'source' => 'doktorforum',     'region' => 'TR'],
+        ['url' => 'https://doktorlarsitesi.net/feed/',                             'source' => 'doktorlarsitesi', 'region' => 'TR'],
+        ['url' => 'https://ogretmenforum.com/forumlar/-/index.rss',                'source' => 'ogretmenforum',   'region' => 'TR'],
+        ['url' => 'https://forum.ogretmen.net/latest.rss',                         'source' => 'ogretmen-net',    'region' => 'TR'],
+        ['url' => 'https://milliegitimakademileri.com/feed/',                      'source' => 'mea',             'region' => 'TR'],
+        ['url' => 'https://www.egitimhane.com/rss.xml',                            'source' => 'egitimhane',      'region' => 'TR'],
+        ['url' => 'https://www.tmmob.org.tr/rss.xml',                              'source' => 'tmmob',           'region' => 'TR'],
+        ['url' => 'https://veterinerhekim.com.tr/feed/',                           'source' => 'veterinerhekim',  'region' => 'TR'],
+        ['url' => 'https://www.gencveteriner.com/index.php?action=.xml;type=rss2', 'source' => 'gencveteriner',   'region' => 'TR'],
+    ],
+
+    // Türkiye'deki meslek gruplarına özel forum toplulukları — referans amaçlı.
+    // 2026-07-04'te her URL tek tek kontrol edildi: RSS/Atom akışı bulunanlar
+    // yukarıdaki 'feeds' dizisine taşınıp taramaya dahil edildi (active => true);
+    // RSS'i olmayan veya erişilemeyen (DNS/timeout) siteler listeden silindi.
+    'profession_forums' => [
+        'Hukuk' => [
+            ['name' => 'Hukuki.NET Forumları', 'url' => 'https://www.hukuki.net/forum.php', 'rss' => true, 'active' => true],
+        ],
+        'Tıp / Sağlık' => [
+            ['name' => 'MediFORUM (Hekim)',         'url' => 'https://mediforum.net/forum-hekim.html',         'rss' => true, 'active' => true],
+            ['name' => 'DrTus.com Forum',           'url' => 'https://www.drtus.com/forum/viewforum.php?f=51', 'rss' => true, 'active' => true],
+            ['name' => 'Doktor Forum Sitesi',       'url' => 'https://www.doktorforum.com.tr/',                'rss' => true, 'active' => true],
+            ['name' => 'DoktorlarSitesi.Net Forum', 'url' => 'https://doktorlarsitesi.net/forum-3/',           'rss' => true, 'active' => true],
+        ],
+        'Muhasebe / Mali Müşavirlik' => [
+            ['name' => 'Alomaliye Forum', 'url' => 'https://forum.alomaliye.com/', 'rss' => true, 'active' => true],
+        ],
+        'Eğitim / Öğretmenlik' => [
+            ['name' => 'Öğretmen Forum',               'url' => 'https://ogretmenforum.com/',                     'rss' => true, 'active' => true],
+            ['name' => 'EğitimHane',                   'url' => 'https://www.egitimhane.com/index.php?ind=forum', 'rss' => true, 'active' => true],
+            ['name' => 'Öğretmen Forum (Memurlar)',    'url' => 'https://forum.ogretmen.net/',                    'rss' => true, 'active' => true],
+            ['name' => 'Milli Eğitim Akademisi Forum', 'url' => 'https://milliegitimakademileri.com/forum/',      'rss' => true, 'active' => true],
+        ],
+        'Mühendislik' => [
+            ['name' => 'TMMOB', 'url' => 'https://www.tmmob.org.tr/', 'rss' => true, 'active' => true],
+        ],
+        'Veterinerlik' => [
+            ['name' => 'VeterinerHekim.com.tr', 'url' => 'https://veterinerhekim.com.tr/', 'rss' => true, 'active' => true],
+            ['name' => 'GençVeteriner',         'url' => 'https://www.gencveteriner.com/', 'rss' => true, 'active' => true],
+        ],
+        'Teknoloji / Yazılım' => [
+            ['name' => 'Technopat Forum',    'url' => 'https://www.technopat.net/sosyal/forums/', 'rss' => true, 'active' => true],
+            ['name' => 'ShiftDelete Forum',  'url' => 'https://forum.shiftdelete.net/',            'rss' => true, 'active' => true],
+            ['name' => 'DonanımHaber Forum', 'url' => 'https://forum.donanimhaber.com/',           'rss' => true, 'active' => true],
+        ],
     ],
 ];
