@@ -32,4 +32,5 @@ $router->post('/market/companies', 'MarketController@storeCompany');
 $router->post('/market/companies/{id}/delete', 'MarketController@destroyCompany');
 
 $router->post('/scan/run', 'ScanController@run');
+$router->get('/scan/status', 'ScanController@status');
 $router->get('/logs', 'LogController@index');

@@ -87,3 +87,55 @@
         if (e.key === 'Escape') closePop();
     });
 })();
+
+// Tarama ilerlemesi — form AJAX'a çevrilir, buton altında feed bazlı % çubuğu gösterilir.
+(function () {
+    const form = document.querySelector('.sidebar-scan');
+    if (!form) return;
+    const btn = form.querySelector('button');
+    const box = form.querySelector('.scan-progress');
+    const bar = form.querySelector('.scan-progress-bar');
+    const text = form.querySelector('.scan-progress-text');
+    const base = window.APP_BASE_URL || '';
+    let timer = null;
+
+    function setBar(pct, label) {
+        bar.style.width = pct + '%';
+        text.textContent = label;
+    }
+
+    function poll() {
+        fetch(base + '/scan/status')
+            .then(function (r) { return r.json(); })
+            .then(function (p) {
+                if (!p || !p.running || !p.total) return;
+                const pct = Math.min(99, Math.round((p.current / p.total) * 100));
+                setBar(Math.max(pct, 2), '%' + pct + (p.source ? ' — ' + p.source : ''));
+            })
+            .catch(function () {});
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (btn.disabled) return;
+        btn.disabled = true;
+        box.hidden = false;
+        setBar(2, 'Başlatılıyor…');
+        timer = setInterval(poll, 1000);
+        fetch(base + '/scan/run', { method: 'POST', headers: { 'X-Requested-With': 'fetch' } })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function () {
+                clearInterval(timer);
+                setBar(100, '%100 — tamamlandı');
+                setTimeout(function () { window.location.href = base + '/'; }, 800);
+            })
+            .catch(function () {
+                clearInterval(timer);
+                setBar(100, 'Hata — tekrar deneyin');
+                btn.disabled = false;
+            });
+    });
+})();

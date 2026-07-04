@@ -30,7 +30,12 @@ a { color: var(--primary); text-decoration: none; }
 .sidebar nav a.active { background: var(--primary); color: #fff; }
 .nav-icon { width: 18px; text-align: center; }
 .sidebar-scan { margin-bottom: 4px; }
+.sidebar-scan .btn:disabled { opacity: .55; cursor: default; }
 .scan-note { font-size: 11px; color: #64748b; text-align: center; margin-top: 8px; }
+.scan-progress { margin-top: 10px; }
+.scan-progress-track { height: 6px; background: rgba(255,255,255,.14); border-radius: 99px; overflow: hidden; }
+.scan-progress-bar { height: 100%; width: 0; background: var(--primary); border-radius: 99px; transition: width .6s ease; }
+.scan-progress-text { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 6px; }
 
 /* Main */
 .main { flex: 1; padding: 24px 28px; max-width: 1500px; }

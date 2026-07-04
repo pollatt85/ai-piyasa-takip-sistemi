@@ -25,6 +25,10 @@ $flashData = flash();
         <div class="brand">📡 <span>Piyasa Takip</span></div>
         <form method="post" action="<?= url('scan/run') ?>" class="sidebar-scan">
             <button type="submit" class="btn btn-primary btn-block">⟳ Tarama Başlat</button>
+            <div class="scan-progress" hidden>
+                <div class="scan-progress-track"><div class="scan-progress-bar"></div></div>
+                <p class="scan-progress-text">Başlatılıyor…</p>
+            </div>
             <p class="scan-note">RSS + Reddit (ücretsiz kaynaklar)</p>
         </form>
         <nav>
