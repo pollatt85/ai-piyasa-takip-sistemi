@@ -88,7 +88,8 @@
     });
 })();
 
-// Tarama ilerlemesi — form AJAX'a çevrilir, buton altında feed bazlı % çubuğu gösterilir.
+// Tarama ilerlemesi — form AJAX'a çevrilir, sunucudan akan NDJSON satırlarıyla
+// buton altındaki % çubuğu güncellenir (feed başına bir ilerleme olayı).
 (function () {
     const form = document.querySelector('.sidebar-scan');
     if (!form) return;
@@ -97,22 +98,32 @@
     const bar = form.querySelector('.scan-progress-bar');
     const text = form.querySelector('.scan-progress-text');
     const base = window.APP_BASE_URL || '';
-    let timer = null;
+
+    // Tarama sonrası yenilenen sayfada sonuç mesajını flash olarak göster.
+    const doneMessage = sessionStorage.getItem('scanMessage');
+    if (doneMessage) {
+        sessionStorage.removeItem('scanMessage');
+        const flash = document.createElement('div');
+        flash.className = 'flash flash-success';
+        flash.textContent = doneMessage;
+        const main = document.querySelector('.main');
+        if (main) main.insertBefore(flash, main.firstChild);
+    }
 
     function setBar(pct, label) {
         bar.style.width = pct + '%';
         text.textContent = label;
     }
 
-    function poll() {
-        fetch(base + '/scan/status')
-            .then(function (r) { return r.json(); })
-            .then(function (p) {
-                if (!p || !p.running || !p.total) return;
-                const pct = Math.min(99, Math.round((p.current / p.total) * 100));
-                setBar(Math.max(pct, 2), '%' + pct + (p.source ? ' — ' + p.source : ''));
-            })
-            .catch(function () {});
+    function handleEvent(ev) {
+        if (ev.type === 'progress' && ev.total) {
+            const pct = Math.min(99, Math.max(2, Math.round((ev.current / ev.total) * 100)));
+            setBar(pct, '%' + pct + (ev.source ? ' — ' + ev.source : ''));
+        } else if (ev.type === 'done') {
+            setBar(100, '%100 — tamamlandı');
+            if (ev.message) sessionStorage.setItem('scanMessage', ev.message);
+            setTimeout(function () { window.location.href = base + '/'; }, 800);
+        }
     }
 
     form.addEventListener('submit', function (e) {
@@ -121,19 +132,26 @@
         btn.disabled = true;
         box.hidden = false;
         setBar(2, 'Başlatılıyor…');
-        timer = setInterval(poll, 1000);
         fetch(base + '/scan/run', { method: 'POST', headers: { 'X-Requested-With': 'fetch' } })
             .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            })
-            .then(function () {
-                clearInterval(timer);
-                setBar(100, '%100 — tamamlandı');
-                setTimeout(function () { window.location.href = base + '/'; }, 800);
+                if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+                const reader = r.body.getReader();
+                const decoder = new TextDecoder();
+                let buf = '';
+                return (function pump() {
+                    return reader.read().then(function (chunk) {
+                        if (!chunk.done) buf += decoder.decode(chunk.value, { stream: true });
+                        let nl;
+                        while ((nl = buf.indexOf('\n')) !== -1) {
+                            const line = buf.slice(0, nl).trim();
+                            buf = buf.slice(nl + 1);
+                            if (line) handleEvent(JSON.parse(line));
+                        }
+                        if (!chunk.done) return pump();
+                    });
+                })();
             })
             .catch(function () {
-                clearInterval(timer);
                 setBar(100, 'Hata — tekrar deneyin');
                 btn.disabled = false;
             });

@@ -8,9 +8,8 @@ declare(strict_types=1);
  */
 class Scanner
 {
-    public const PROGRESS_FILE = BASE_PATH . '/data/scan_progress.json';
-
-    public function run(): array
+    /** @param callable|null $onProgress fn(int $current, int $total, string $source) — feed başına ilerleme bildirimi */
+    public function run(?callable $onProgress = null): array
     {
         $cfg = config();
         $signal = new Signal();
@@ -20,7 +19,9 @@ class Scanner
         $total = count($cfg['feeds']);
 
         foreach ($cfg['feeds'] as $i => $feed) {
-            $this->writeProgress(['running' => true, 'current' => $i, 'total' => $total, 'source' => $feed['source']]);
+            if ($onProgress !== null) {
+                $onProgress($i, $total, $feed['source']);
+            }
             if ($i > 0) {
                 sleep(6); // Reddit art arda istekleri 429 ile keser
             }
@@ -47,22 +48,11 @@ class Scanner
             }
         }
 
-        $this->writeProgress(['running' => false, 'current' => $total, 'total' => $total, 'stats' => $stats]);
         (new Log())->add('tarama', sprintf(
             'Tarama bitti: %d içerik, %d eşleşme, %d yeni, %d güncellenen sinyal',
             $stats['fetched'], $stats['matched'], $stats['new'], $stats['updated']
         ));
         return $stats;
-    }
-
-    /** İlerlemeyi dosyaya yazar; arayüz scan/status üzerinden okur. */
-    private function writeProgress(array $data): void
-    {
-        @file_put_contents(
-            self::PROGRESS_FILE,
-            json_encode($data + ['updated_at' => date('c')], JSON_UNESCAPED_UNICODE),
-            LOCK_EX
-        );
     }
 
     /** RSS 2.0 ve Atom (Reddit) formatlarını okur. */
