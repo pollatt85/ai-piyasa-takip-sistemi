@@ -31,6 +31,17 @@ php scripts/scan.php      # ilk taramayı çalıştırır (opsiyonel)
 XAMPP Apache ile: `http://localhost/ai-piyasa-takip-sistemi/` (kök .htaccess public/'e yönlendirir)
 veya: `php -S localhost:8123 -t public public/router.php`
 
+### GitHub Codespaces
+- `.devcontainer/devcontainer.json` + `post-create.sh` ile hazır: Codespace açılınca
+  gerekli PHP eklentileri kontrol edilir, `data/app.sqlite` yoksa `migrate.php` otomatik
+  çalışır, sunucu `php -S 0.0.0.0:8123 -t public public/router.php` ile başlar (port
+  8123 forward edilir).
+- `data/app.sqlite` git'e commit edilmez (`.gitignore`) — Codespace'in kendi diskinde
+  kalıcıdır. Codespace silinmediği sürece (uzun süre açılmazsa GitHub otomatik silebilir)
+  veri korunur; günlük manuel kullanım hem taramayı yapar hem silinme sayacını sıfırlar.
+- Kod değişikliği gerektiğinde Codespace içinde ayrı bir Claude Code oturumu açılıp
+  doğrudan orada düzenlenip push edilebilir (PC'ye dönmeden).
+
 ### Faz 9 Kalanlar
 - [ ] Hosting'e taşıma provası (paylaşımlı hosting'de .htaccess + SQLite yolu)
 - [ ] Zamanlanmış tarama: Windows Görev Zamanlayıcı'ya `php scripts/scan.php` tanımı

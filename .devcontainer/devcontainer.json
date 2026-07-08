@@ -1,0 +1,13 @@
+{
+    "name": "ai-piyasa-takip-sistemi",
+    "image": "mcr.microsoft.com/devcontainers/php:8.2",
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "forwardPorts": [8123],
+    "portsAttributes": {
+        "8123": {
+            "label": "Piyasa Takip Dashboard",
+            "onAutoForward": "openBrowser"
+        }
+    },
+    "postStartCommand": "nohup php -S 0.0.0.0:8123 -t public public/router.php > /tmp/php-server.log 2>&1 &"
+}
