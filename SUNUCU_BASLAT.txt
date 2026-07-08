@@ -1,0 +1,8 @@
+Codespace her acildiginda / uykudan uyandiginda, dashboard calismiyorsa
+asagidaki satiri kopyalayip terminale yapistir ve Enter'a bas:
+
+bash start.sh
+
+Terminal nerede: alt kisimda "TERMINAL" sekmesi (yoksa Ctrl+` ile acilir).
+Yapıstirdiktan sonra "BAGLANTI NOKTALARI" sekmesinden 8123 satirindaki
+dunya (globe) ikonuna tikla, dashboard tarayicida acilir.
