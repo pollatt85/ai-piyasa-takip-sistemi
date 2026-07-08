@@ -9,5 +9,5 @@
             "onAutoForward": "openBrowser"
         }
     },
-    "postStartCommand": "nohup php -S 0.0.0.0:8123 -t public public/router.php > /tmp/php-server.log 2>&1 &"
+    "postStartCommand": "bash .devcontainer/post-start.sh"
 }
