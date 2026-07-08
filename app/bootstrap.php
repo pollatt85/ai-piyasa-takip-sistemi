@@ -6,7 +6,7 @@ if (!defined('BASE_PATH')) {
 }
 
 spl_autoload_register(function (string $class): void {
-    foreach (['core', 'controllers', 'models'] as $dir) {
+    foreach (['core', 'controllers', 'models', 'services'] as $dir) {
         $file = BASE_PATH . '/app/' . $dir . '/' . $class . '.php';
         if (is_file($file)) {
             require $file;

@@ -1,8 +1,15 @@
-# 08 — AI Entegrasyonu (Claude API)
+# 08 — AI Entegrasyonu (Claude API / Ücretsiz LLM)
 
-> Bu belge, sistemin **nerede ve nasıl Claude kullandığını** kapsar. Skor/sınıflandırma
+> Bu belge, sistemin **nerede ve nasıl LLM kullandığını** kapsar. Skor/sınıflandırma
 > mantığı [03-analiz-siniflandirma.md](03-analiz-siniflandirma.md) içindedir.
 > İlgili faz: **Faz 8**.
+>
+> **Uygulama notu:** Claude API ücretli olduğu için birincil sınıflandırma hâlâ
+> kural tabanlı (`Scanner::classify`). Bunun yerine `app/services/AiClassifier.php`
+> ile kredi kartsız free-tier bir sağlayıcı (Groq) kullanılarak, kural filtresinden
+> geçen adaylara **ikinci aşama evet/hayır doğrulaması** eklendi (aşağıdaki "1.
+> Sınıflandırma" bölümünde tarif edilen tam JSON sınıflandırması değil, daha dar
+> kapsamlı bir doğrulama adımı). Varsayılan kapalıdır (`ai_classifier.enabled=false`).
 
 ---
 

@@ -12,6 +12,7 @@
 |---|---|---|
 | RSS (forum/haber siteleri) | Tamamen ücretsiz | Faz 1 kaynak |
 | Reddit RSS (`reddit.com/r/xxx/.rss`) | Ücretsiz, API key gerektirmez | Faz 1 kaynak |
+| R10.net (freelancer/webmaster forumu) | RSS yok — kategori sayfalarından HTML başlık scraping | Faz 1 kaynak (ek) |
 | Google Maps yorumları (Places API, Enterprise+Atmosphere SKU) | Ayda 1.000 ücretsiz sorgu | Faz 2 kaynak |
 | Google Custom Search JSON API | Günde 100 ücretsiz sorgu | Faz 2 kaynak |
 | X / Instagram / Facebook resmi API'leri | Anlamlı ücretsiz kota yok | Opsiyonel / muhtemelen atlanacak |
@@ -31,6 +32,26 @@
 ### Reddit RSS (Faz 1 kaynak)
 - `reddit.com/r/<subreddit>/.rss` — API anahtarı gerektirmez.
 - İhtiyaç/şikâyet kalıpları için verimli; ucuz filtreye çok uygun.
+
+### R10.net (Faz 1 kaynak, ek)
+- Türkiye'nin en büyük freelancer/webmaster forumu (SEO, yazılım, e-ticaret, iş
+  ilanları) — proje fikri sinyali açısından zengin ama **RSS/Atom feed'i yok**,
+  gönderi içeriği JS ile yükleniyor.
+- `Scanner::fetchHtmlList()` kategori sayfalarını (`feeds[].type = 'html_list'`)
+  çekip yalnızca thread başlıklarını (`div.title > a[rel=ugc]`) HTML olarak
+  parse eder; gönderi gövdesi çekilmez (düşük veri zenginliği, kabul edilen risk).
+- Kırılgan bir yöntemdir: R10 HTML yapısı değişirse o kaynak sessizce atlanır,
+  tarama diğer feed'lerle devam eder (bkz. `Scanner::run()` try/catch-per-feed).
+
+### Bilinen Kısıt: TLS Sertifika Doğrulaması
+- Bu ortamda (XAMPP/Windows) birçok kaynak (webrazzi, hukuki.net, meslek forumları,
+  R10 dahil) TLS handshake'te ara sertifikayı göndermiyor; PHP'nin OpenSSL'i
+  (tarayıcıların/Windows'un aksine AIA fetching yapmadığı için) eksik zinciri
+  tamamlayamıyor ve güncel bir CA paketiyle bile doğrulama başarısız oluyor.
+- `Scanner::httpContext()` bu yüzden tüm RSS/HTML çekimlerinde sertifika
+  doğrulamasını kapatır (`verify_peer=false`). Kabul edilen risk: yalnızca herkese
+  açık RSS/HTML içeriği okunuyor, kimlik bilgisi alışverişi yok, sonuç zaten aynı
+  kural tabanlı filtre/sınıflandırma zincirinden geçiyor.
 
 ### Google Maps Yorumları (Faz 2 kaynak)
 - Places API, Enterprise+Atmosphere SKU; **ayda 1.000 ücretsiz sorgu**.

@@ -13,9 +13,12 @@
 ### Çalışan Sistem (özet)
 - Hafif MVC: `public/index.php` → `Router` → controller → view (framework yok)
 - SQLite: `data/app.sqlite`, 9 tablo (`scripts/migrate.php` ile kurulur)
-- Tarama: `scripts/scan.php` (CLI) veya dashboard "Tarama Başlat" — RSS + Reddit RSS
-- Sınıflandırma: **kural tabanlı** (alt sektör anahtar kelimeleri) — Claude API ücretli
-  olduğundan bilinçli olarak kullanılmıyor; sistem %100 ücretsiz kaynakla çalışıyor
+- Tarama: `scripts/scan.php` (CLI) veya dashboard "Tarama Başlat" — RSS + Reddit RSS +
+  R10.net (HTML başlık scraping, bkz. `Scanner::fetchHtmlList`)
+- Sınıflandırma: **kural tabanlı** (alt sektör anahtar kelimeleri, sektöre özel filtre
+  kalıpları) + opsiyonel ücretsiz LLM ikinci aşama doğrulama (`app/services/AiClassifier.php`,
+  varsayılan kapalı — bkz. `ai_classifier` config). Ücretli Claude API hâlâ
+  kullanılmıyor; sistem %100 ücretsiz kaynak/kota ile çalışıyor
 - Skor/eşik `app/config.php` içinde; eşiği aşan sinyal `olgun_firsat`
 - Dashboard: özet kartları, Fırsat Radarı, Favoriler, sektör haritası + Chart.js
   grafikler, Kanban, görev/tik özeti, aktivite akışı
@@ -35,7 +38,8 @@ veya: `php -S localhost:8123 -t public public/router.php`
 - [ ] Skor ağırlıklarını gerçek veriyle kalibre etme
 
 ### Kapsam DIŞI (bkz. docs/09-genisleme-potansiyeli.md)
-- Ücretli API'ler (Claude, Google Maps, Custom Search) — kullanıcı kararıyla atlandı
+- Ücretli API'ler (Claude, Google Maps, Custom Search) — kullanıcı kararıyla atlandı.
+  İkinci aşama doğrulama için yalnızca kredi kartsız free-tier LLM (Groq) opsiyoneldir.
 - Mobil uygulama, bildirim, multi-user
 
 ### İlgili Belgeler

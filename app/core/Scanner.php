@@ -15,6 +15,7 @@ class Scanner
         $signal = new Signal();
         $subSectors = (new SubSector())->allWithKeywords();
         $fallbackId = (new SubSector())->fallbackId();
+        $aiClassifier = new AiClassifier();
         $stats = ['fetched' => 0, 'matched' => 0, 'new' => 0, 'updated' => 0, 'failed_feeds' => []];
         $total = count($cfg['feeds']);
 
@@ -25,20 +26,30 @@ class Scanner
             if ($i > 0) {
                 sleep(6); // Reddit art arda istekleri 429 ile keser
             }
-            $items = $this->fetchFeed($feed['url']);
+            $type = $feed['type'] ?? 'rss';
+            $items = $type === 'html_list' ? $this->fetchHtmlList($feed['url']) : $this->fetchFeed($feed['url']);
             if ($items === null) {
                 sleep(8);
-                $items = $this->fetchFeed($feed['url']);
+                $items = $type === 'html_list' ? $this->fetchHtmlList($feed['url']) : $this->fetchFeed($feed['url']);
             }
             if ($items === null) {
                 $stats['failed_feeds'][] = $feed['url'];
                 continue;
             }
+
+            $patterns = $cfg['filter_patterns'];
+            if (!empty($feed['sector']) && !empty($cfg['sector_filter_patterns'][$feed['sector']])) {
+                $patterns = array_merge($patterns, $cfg['sector_filter_patterns'][$feed['sector']]);
+            }
+
             foreach ($items as $item) {
                 $stats['fetched']++;
                 $text = $item['title'] . ' ' . $item['summary'];
-                if (!$this->passesFilter($text, $cfg['filter_patterns'])) {
+                if (!$this->passesFilter($text, $patterns, $cfg['filter_patterns_negative'])) {
                     continue;
+                }
+                if ($aiClassifier->verify($text) === false) {
+                    continue; // ücretsiz LLM bunun bir iş fikri sinyali olmadığını doğruladı
                 }
                 $stats['matched']++;
                 $subSectorId = $this->classify($text, $subSectors, $fallbackId);
@@ -55,14 +66,32 @@ class Scanner
         return $stats;
     }
 
+    /**
+     * Birçok kaynak (webrazzi, hukuki.net, meslek forumları vb.) TLS handshake'te ara
+     * sertifikayı göndermiyor; PHP'nin OpenSSL'i (tarayıcıların/Windows'un aksine) eksik
+     * zinciri tamamlayamıyor ve güncel bir CA paketiyle bile doğrulama başarısız oluyor
+     * (bkz. MD/docs/07-veri-kaynaklari.md). Bu yüzden sertifika doğrulaması kapatılır —
+     * sadece herkese açık RSS/HTML içeriği okunuyor, kimlik bilgisi alışverişi yok ve
+     * sonuç zaten aynı kural tabanlı filtre/sınıflandırma zincirinden geçiyor.
+     */
+    private function httpContext()
+    {
+        return stream_context_create([
+            'http' => [
+                'timeout' => 12,
+                'user_agent' => 'Mozilla/5.0 (PiyasaTakip/1.0; localhost)',
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+        ]);
+    }
+
     /** RSS 2.0 ve Atom (Reddit) formatlarını okur. */
     private function fetchFeed(string $url): ?array
     {
-        $ctx = stream_context_create(['http' => [
-            'timeout' => 12,
-            'user_agent' => 'Mozilla/5.0 (PiyasaTakip/1.0; localhost)',
-        ]]);
-        $xmlRaw = @file_get_contents($url, false, $ctx);
+        $xmlRaw = @file_get_contents($url, false, $this->httpContext());
         if ($xmlRaw === false) {
             return null;
         }
@@ -97,15 +126,58 @@ class Scanner
         return $items;
     }
 
-    private function passesFilter(string $text, array $patterns): bool
+    /**
+     * RSS/Atom'u olmayan forum sayfalarından (ör. R10.net) thread başlıklarını çeker.
+     * Kaynağın HTML yapısı değişirse sessizce null döner; tarama diğer feed'lerle devam eder.
+     */
+    private function fetchHtmlList(string $url): ?array
+    {
+        $html = @file_get_contents($url, false, $this->httpContext());
+        if ($html === false) {
+            return null;
+        }
+
+        $doc = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $doc->loadHTML($html);
+        libxml_use_internal_errors(false);
+        $xpath = new DOMXPath($doc);
+        $anchors = $xpath->query('//div[@class="title"]/a[@rel="ugc"]');
+        if ($anchors === false || $anchors->length === 0) {
+            return null;
+        }
+
+        $items = [];
+        foreach ($anchors as $a) {
+            $items[] = [
+                'title' => trim($a->textContent),
+                'summary' => '',
+                'link' => trim($a->getAttribute('href')),
+            ];
+        }
+        return $items;
+    }
+
+    /** Pozitif kalıp sayısı negatif (alakasız/teknik destek) kalıp sayısından fazlaysa geçer. */
+    private function passesFilter(string $text, array $patterns, array $negativePatterns = []): bool
     {
         $lower = mb_strtolower($text);
+        $positiveHits = 0;
         foreach ($patterns as $pattern) {
             if (mb_strpos($lower, $pattern) !== false) {
-                return true;
+                $positiveHits++;
             }
         }
-        return false;
+        if ($positiveHits === 0) {
+            return false;
+        }
+        $negativeHits = 0;
+        foreach ($negativePatterns as $pattern) {
+            if (mb_strpos($lower, $pattern) !== false) {
+                $negativeHits++;
+            }
+        }
+        return $positiveHits > $negativeHits;
     }
 
     /** Alt sektör anahtar kelimeleriyle eşleştirir; eşleşme yoksa fallback. */
