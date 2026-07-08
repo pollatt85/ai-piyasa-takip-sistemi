@@ -9,5 +9,6 @@
             "onAutoForward": "openBrowser"
         }
     },
-    "postStartCommand": "bash .devcontainer/post-start.sh"
+    "postStartCommand": "bash .devcontainer/post-start.sh",
+    "postAttachCommand": "bash .devcontainer/post-start.sh"
 }
