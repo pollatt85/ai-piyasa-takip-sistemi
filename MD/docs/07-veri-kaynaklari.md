@@ -13,6 +13,7 @@
 | RSS (forum/haber siteleri) | Tamamen ücretsiz | Faz 1 kaynak |
 | Reddit RSS (`reddit.com/r/xxx/.rss`) | Ücretsiz, API key gerektirmez | Faz 1 kaynak |
 | R10.net (freelancer/webmaster forumu) | RSS yok — kategori sayfalarından HTML başlık scraping | Faz 1 kaynak (ek) |
+| App Store müşteri yorumları (Apple resmi RSS) | Tamamen ücretsiz, key yok | Faz 1 kaynak (ek) |
 | Google Maps yorumları (Places API, Enterprise+Atmosphere SKU) | Ayda 1.000 ücretsiz sorgu | Faz 2 kaynak |
 | Google Custom Search JSON API | Günde 100 ücretsiz sorgu | Faz 2 kaynak |
 | X / Instagram / Facebook resmi API'leri | Anlamlı ücretsiz kota yok | Opsiyonel / muhtemelen atlanacak |
@@ -42,6 +43,25 @@
   parse eder; gönderi gövdesi çekilmez (düşük veri zenginliği, kabul edilen risk).
 - Kırılgan bir yöntemdir: R10 HTML yapısı değişirse o kaynak sessizce atlanır,
   tarama diğer feed'lerle devam eder (bkz. `Scanner::run()` try/catch-per-feed).
+
+### App Store Müşteri Yorumları (Faz 1 kaynak, ek)
+- Apple'ın resmi, ücretsiz, key gerektirmeyen Atom feed'i:
+  `itunes.apple.com/{ülke}/rss/customerreviews/id={app_id}/sortby=mostrecent/xml`.
+  Format zaten Reddit'in Atom yapısıyla aynı, `Scanner::fetchFeed()` değişiklik
+  gerekmeden parse ediyor.
+- Rakip uygulamalardaki 1 yıldızlı yorumlarda geçen "keşke şu özellik olsa",
+  "alternatifi yok" gibi ifadeler rakip/boşluk analizi için değerli.
+- Başlangıç seti: Trendyol, Hepsiburada (e-ticaret), Papara (ödeme/finans),
+  Kolay Randevu (randevu) — `app/config.php` → `feeds` içinde `appstore-*` kaynak adıyla.
+
+### Google Maps / Yandex Yorumları — Değerlendirildi, Eklenmedi
+- **Google Places API:** Ücretsiz kota (ayda 1.000 sorgu) yeterli olsa da API'yi
+  aktifleştirmek için Google Cloud projesine kredi kartı eklemek şart; ayrıca
+  ToS review metnini Google Haritalar dışında saklamayı/göstermeyi yasaklıyor.
+- **Yandex Maps:** Resmi bir review API'si yok. R10'un aksine, yorum verisi
+  sayfanın statik HTML'inde de yok — tamamen dokümante edilmemiş bir JS/XHR
+  API'siyle geliyor. Mevcut hafif PHP mimarisiyle (headless browser olmadan)
+  pratik değil; bu yüzden eklenmedi.
 
 ### Bilinen Kısıt: TLS Sertifika Doğrulaması
 - Bu ortamda (XAMPP/Windows) birçok kaynak (webrazzi, hukuki.net, meslek forumları,

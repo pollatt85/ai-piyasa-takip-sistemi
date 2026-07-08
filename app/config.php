@@ -119,6 +119,13 @@ return [
         ['url' => 'https://www.r10.net/yazilim-kodlama-is-ilanlari/',   'source' => 'r10', 'region' => 'TR', 'type' => 'html_list'],
         ['url' => 'https://www.r10.net/ecommerce-yazilimlari/',         'source' => 'r10', 'region' => 'TR', 'type' => 'html_list'],
         ['url' => 'https://www.r10.net/script-satisi/',                 'source' => 'r10', 'region' => 'TR', 'type' => 'html_list'],
+        // App Store müşteri yorumları — Apple'ın resmi, ücretsiz, key gerektirmeyen
+        // RSS'i (Atom formatında, fetchFeed() zaten Atom'u destekliyor). Rakip
+        // uygulamalarda "keşke şu özellik olsa / alternatif yok" gibi sinyaller için.
+        ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=524362642/sortby=mostrecent/xml',  'source' => 'appstore-trendyol',    'region' => 'TR'],
+        ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=481035064/sortby=mostrecent/xml',  'source' => 'appstore-hepsiburada', 'region' => 'TR'],
+        ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=1146507477/sortby=mostrecent/xml', 'source' => 'appstore-papara',      'region' => 'TR'],
+        ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=1003826863/sortby=mostrecent/xml', 'source' => 'appstore-kolayrandevu','region' => 'TR'],
     ],
 
     // Türkiye'deki meslek gruplarına özel forum toplulukları — referans amaçlı.

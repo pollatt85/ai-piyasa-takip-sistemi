@@ -14,7 +14,9 @@
 - Hafif MVC: `public/index.php` → `Router` → controller → view (framework yok)
 - SQLite: `data/app.sqlite`, 9 tablo (`scripts/migrate.php` ile kurulur)
 - Tarama: `scripts/scan.php` (CLI) veya dashboard "Tarama Başlat" — RSS + Reddit RSS +
-  R10.net (HTML başlık scraping, bkz. `Scanner::fetchHtmlList`)
+  R10.net (HTML başlık scraping, bkz. `Scanner::fetchHtmlList`) + App Store müşteri
+  yorumları (Apple resmi Atom feed). Google Maps/Yandex değerlendirildi, ToS/teknik
+  kısıtlar yüzünden eklenmedi (bkz. docs/07-veri-kaynaklari.md)
 - Sınıflandırma: **kural tabanlı** (alt sektör anahtar kelimeleri, sektöre özel filtre
   kalıpları) + opsiyonel ücretsiz LLM ikinci aşama doğrulama (`app/services/AiClassifier.php`,
   varsayılan kapalı — bkz. `ai_classifier` config). Ücretli Claude API hâlâ
