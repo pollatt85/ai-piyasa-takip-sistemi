@@ -5,13 +5,14 @@ declare(strict_types=1);
 
 $router->get('/', 'DashboardController@index');
 
-$router->get('/signals', 'SignalController@index');
-$router->post('/signals', 'SignalController@store');
-$router->post('/signals/{id}/favorite', 'SignalController@favorite');
-$router->post('/signals/{id}/score', 'SignalController@score');
-$router->post('/signals/{id}/to-project', 'SignalController@toProject');
-$router->post('/signals/{id}/delete', 'SignalController@destroy');
-$router->post('/signals/{id}/translate', 'SignalController@translate');
+$router->get('/problems', 'ProblemController@index');
+$router->post('/problems', 'ProblemController@store');
+$router->get('/problems/{id}', 'ProblemController@show');
+$router->post('/problems/{id}/favorite', 'ProblemController@favorite');
+$router->post('/problems/{id}/score', 'ProblemController@score');
+$router->post('/problems/{id}/to-project', 'ProblemController@toProject');
+$router->post('/problems/{id}/delete', 'ProblemController@destroy');
+$router->post('/problems/{id}/translate', 'ProblemController@translate');
 
 $router->get('/projects', 'ProjectController@index');
 $router->post('/projects', 'ProjectController@store');

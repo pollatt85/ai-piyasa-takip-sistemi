@@ -33,7 +33,7 @@ class Router
 
     private function normalize(string $uri): string
     {
-        $path = parse_url($uri, PHP_URL_PATH) ?? '/';
+        $path = rawurldecode(parse_url($uri, PHP_URL_PATH) ?? '/');
         $script = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
         $bases = [$script];
         if (str_ends_with($script, '/public')) {

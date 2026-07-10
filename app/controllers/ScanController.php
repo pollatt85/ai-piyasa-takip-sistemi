@@ -23,6 +23,11 @@ class ScanController extends Controller
      */
     private function runStreaming(): void
     {
+        // Kullanıcı tarama sürerken başka bir sayfaya geçerse tarayıcı bu
+        // bağlantıyı kapatır; ignore_user_abort olmadan PHP script'i o anda
+        // yarıda keser (yarım kalmış/tutarsız tarama). Bağlantı kopsa da
+        // scan DB'ye yazmaya devam etsin diye burada kapatılmasını engelliyoruz.
+        ignore_user_abort(true);
         session_write_close();
         header('Content-Type: application/x-ndjson; charset=utf-8');
         header('Cache-Control: no-cache');
@@ -47,7 +52,7 @@ class ScanController extends Controller
     private function buildMessage(array $stats): string
     {
         $message = sprintf(
-            'Tarama tamamlandı: %d içerik tarandı, %d filtreden geçti, %d yeni sinyal, %d güncellendi.',
+            'Tarama tamamlandı: %d içerik tarandı, %d filtreden geçti, %d yeni problem, %d güncellendi.',
             $stats['fetched'], $stats['matched'], $stats['new'], $stats['updated']
         );
         if ($stats['failed_feeds'] !== []) {

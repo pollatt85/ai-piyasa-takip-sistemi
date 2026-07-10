@@ -51,9 +51,9 @@
         }
         e.preventDefault();
 
-        const wrap = btn.closest('[data-signal-id]');
+        const wrap = btn.closest('[data-problem-id]');
         if (!wrap) return;
-        const id = wrap.dataset.signalId;
+        const id = wrap.dataset.problemId;
 
         // Aynı butona tekrar tıklama: aç/kapa
         if (pop && popFor === id) {
@@ -68,7 +68,7 @@
             return;
         }
 
-        fetch((window.APP_BASE_URL || '') + '/signals/' + id + '/translate', { method: 'POST' })
+        fetch((window.APP_BASE_URL || '') + '/problems/' + id + '/translate', { method: 'POST' })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.ok) {

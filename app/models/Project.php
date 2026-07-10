@@ -48,27 +48,34 @@ class Project extends Model
         );
     }
 
-    /** Fırsatı projeye çevirir: başlık, sektör ve kaynak linkleri otomatik taslak. */
-    public function createFromSignal(array $signal): int
+    /** Fırsatı (problem) projeye çevirir: başlık, sektör, MVP notu ve kaynaklar otomatik taslak. */
+    public function createFromProblem(array $problem): int
     {
         $sectorId = null;
-        if (!empty($signal['sub_sector_id'])) {
+        if (!empty($problem['sub_sector_id'])) {
             $sectorId = $this->value(
                 'SELECT sector_id FROM sub_sectors WHERE id = ?',
-                [(int) $signal['sub_sector_id']]
+                [(int) $problem['sub_sector_id']]
             );
         }
+        $notes = '';
+        if (!empty($problem['mvp_suggestion'])) {
+            $notes = 'MVP önerisi: ' . $problem['mvp_suggestion'];
+            if (!empty($problem['mvp_weeks'])) {
+                $notes .= ' (~' . (int) $problem['mvp_weeks'] . ' hafta)';
+            }
+        }
         $id = $this->insert([
-            'title' => mb_substr((string) $signal['content'], 0, 120),
+            'title' => mb_substr((string) $problem['title'], 0, 120),
             'sector_id' => $sectorId,
             'status' => 'yeni',
             'current_phase' => 'Planlama',
-            'region' => $signal['region'] ?? 'TR',
-            'source_links' => (string) ($signal['source_url'] ?? ''),
-            'notes' => '',
+            'region' => $problem['region'] ?? 'TR',
+            'source_links' => (string) ($problem['sources'] ?? ''),
+            'notes' => $notes,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
-        (new Log())->add('firsat_projeye', 'Fırsat projeye çevrildi: ' . mb_substr((string) $signal['content'], 0, 80), $id);
+        (new Log())->add('firsat_projeye', 'Fırsat projeye çevrildi: ' . mb_substr((string) $problem['title'], 0, 80), $id);
         return $id;
     }
 }

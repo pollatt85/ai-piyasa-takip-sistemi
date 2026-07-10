@@ -3,24 +3,67 @@ declare(strict_types=1);
 
 // Skor ağırlıkları ve eşik, kod içine gömülmez (bkz. MD/docs/03-analiz-siniflandirma.md)
 return [
+    // Fırsat skoru: AI boyutları (0-100) ağırlıklı bileşke (0-100 taban) + kanıt
+    // katkısı (kaç kişi/kaç kaynak) + manuel ince ayar. Groq yoksa boyutlar boş
+    // gelir → taban 0, skor yalnızca kanıt/manuel ile oluşur (fail-open).
+    // Boyut ağırlıkları toplamı 1.0 olacak şekilde normalize edilir (bkz. Problem::computeScore).
     'score' => [
-        'w_repeat' => 2,   // tekrar sıklığı — ana ağırlık
-        'w_variety' => 3,  // kaynak çeşitliliği — yankı odasını kırar
-        'w_manual' => 1,   // manuel puan — ince ayar
-        'threshold' => 10, // eşik: üzeri "olgun_firsat"
+        'dims' => [
+            'demand_score' => 0.28,        // Talep — en önemli
+            'ai_solvability' => 0.18,      // AI ile çözülebilirlik
+            'automation_fit' => 0.14,      // Otomasyona uygunluk
+            'subscription_fit' => 0.14,    // Abonelik modeli uygunluğu
+            'competition_inverse' => 0.12, // (100 - Rekabet) — az rakip = yüksek puan
+            'global_opportunity' => 0.08,  // Global pazar
+            'local_opportunity' => 0.06,   // Yerel pazar
+        ],
+        'w_mention' => 3,   // kanıt: her ek kişi/tekrar (cap'li)
+        'mention_cap' => 10,
+        'w_variety' => 5,   // kanıt: kaynak çeşitliliği — yankı odasını kırar
+        'w_manual' => 1,    // manuel puan — ince ayar
+        'threshold' => 55,  // eşik: üzeri "olgun_firsat" (0-100+ ölçekte)
     ],
 
-    // Kural bazlı filtreden geçen adaylar için ikinci aşama ücretsiz LLM doğrulaması
-    // (bkz. app/services/AiClassifier.php, MD/docs/08-ai-entegrasyonu.md). Ücretli
-    // Claude API yerine kredi kartsız free-tier bir sağlayıcı (Groq) kullanılır.
-    // 'enabled' => false + boş api_key iken hiç ağ çağrısı yapılmaz (varsayılan kapalı,
-    // sıfır maliyet). Devreye almak için GROQ_API_KEY ortam değişkeni tanımlanıp
-    // 'enabled' => true yapılır.
+    // Kural bazlı filtreden geçen adaylar için ikinci aşama ücretsiz LLM analizi
+    // (bkz. app/services/AiClassifier.php, MD/docs/08-ai-entegrasyonu.md). Ücretsiz
+    // free-tier sağlayıcı: Google Gemini'nin OpenAI-uyumlu endpoint'i (kod OpenAI
+    // formatında kaldığından yalnızca endpoint+model değişir). GEMINI_API_KEY ortam
+    // değişkeni öncelikli; tanımlı değilse aşağıdaki key kullanılır (Codespaces'te
+    // repo Secret olarak da verilebilir). Key/kota yoksa fail-open: kural sonucu kullanılır.
     'ai_classifier' => [
-        'enabled' => false,
-        'endpoint' => 'https://api.groq.com/openai/v1/chat/completions',
-        'model' => 'llama-3.1-8b-instant',
-        'api_key' => getenv('GROQ_API_KEY') ?: '',
+        'enabled' => true,
+        'endpoint' => 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+        'model' => 'gemini-2.5-flash',
+        'api_key' => getenv('GEMINI_API_KEY') ?: '',
+    ],
+
+    // --- Kalite filtresi (kayıttan ÖNCE eleme; bkz. app/filters/*) ---
+
+    // Anlamlı bir problem ifadesi için minimum kelime sayısı. Altındakiler
+    // ("Ben de", "Katılıyorum", "Harika olmuş") DB'ye hiç yazılmaz (LengthFilter).
+    'min_content_words' => 5,
+
+    // Gürültü kalıpları: teşekkür/mizah/selamlaşma/reklam/spam/clickbait.
+    // NoiseFilter bu kalıplardan biri baskınsa içeriği reddeder (küçük harf aranır).
+    'noise_patterns' => [
+        // teşekkür / onay / boş katılım
+        'teşekkür', 'teşekkürler', 'sağ ol', 'eyvallah', 'eline sağlık', 'emeğine sağlık',
+        'katılıyorum', 'aynen', 'ben de', 'harika olmuş', 'çok güzel', 'süpermiş', 'helal',
+        'thanks', 'thank you', 'thx', 'agreed', 'same here', 'me too', 'nice one', 'lol', 'haha',
+        // selamlaşma / sohbet
+        'günaydın', 'iyi geceler', 'iyi akşamlar', 'hoş geldin', 'nasılsınız', 'kolay gelsin',
+        // reklam / spam / satış
+        'indirim', 'kampanya', 'satılık', 'sipariş için', 'whatsapp hattı', 'dm at', 'takipçi',
+        'bedava kazan', 'para kazan', 'tıkla kazan', 'çekiliş', 'sponsorlu', 'reklam',
+        'buy now', 'discount', 'promo code', 'click here', 'subscribe', 'giveaway',
+    ],
+
+    // --- Kümeleme eşikleri (hibrit; bkz. app/services/ProblemCluster.php) ---
+    // token benzerliği >= high → doğrudan birleştir; low..high arası belirsiz bant →
+    // Groq kanonik slug ile karar; < low → yeni problem.
+    'cluster' => [
+        'high' => 0.55,
+        'low' => 0.30,
     ],
 
     // Ucuz ön filtre: ihtiyaç/şikâyet kalıpları (küçük harf aranır)
@@ -86,16 +129,30 @@ return [
 
     // Ücretsiz, API key gerektirmeyen kaynaklar (RSS + Reddit RSS).
     // Ücretli/kotalı kaynaklar (Google Maps, Custom Search) bilinçli olarak dışarıda.
+    // Her feed 'type' alabilir: 'rss' (varsayılan, RSS 2.0 + Atom), 'html_list'
+    // (RSS'siz forum HTML'i), 'github' (GitHub search API). Yeni kaynak tipi =
+    // app/sources/ altında yeni adapter + SourceRegistry haritasına 1 satır.
     'feeds' => [
-        // Global (Reddit)
-        ['url' => 'https://www.reddit.com/r/Entrepreneur/.rss',  'source' => 'reddit', 'region' => 'Global'],
-        ['url' => 'https://www.reddit.com/r/smallbusiness/.rss', 'source' => 'reddit', 'region' => 'Global'],
-        ['url' => 'https://www.reddit.com/r/SideProject/.rss',   'source' => 'reddit', 'region' => 'Global'],
+        // Global — iş/girişim/SaaS toplulukları (Reddit RSS, key'siz)
+        ['url' => 'https://www.reddit.com/r/Entrepreneur/.rss',  'source' => 'reddit-entrepreneur', 'region' => 'Global'],
+        ['url' => 'https://www.reddit.com/r/smallbusiness/.rss', 'source' => 'reddit-smallbiz',     'region' => 'Global'],
+        ['url' => 'https://www.reddit.com/r/SideProject/.rss',   'source' => 'reddit-sideproject',  'region' => 'Global'],
+        ['url' => 'https://www.reddit.com/r/SaaS/.rss',          'source' => 'reddit-saas',         'region' => 'Global'],
+        ['url' => 'https://www.reddit.com/r/startups/.rss',      'source' => 'reddit-startups',     'region' => 'Global'],
+        ['url' => 'https://www.reddit.com/r/nocode/.rss',        'source' => 'reddit-nocode',       'region' => 'Global'],
+        // Hacker News — "Ask HN" gerçek ihtiyaç/soru akışı (hnrss.org, ücretsiz)
+        ['url' => 'https://hnrss.org/ask',                       'source' => 'hackernews-ask',      'region' => 'Global'],
+        // Product Hunt — yeni ürün lansmanları (rakip/pazar sinyali) → strict (haber gibi)
+        ['url' => 'https://www.producthunt.com/feed',            'source' => 'producthunt',         'region' => 'Global', 'strict' => true],
+        // Google News RSS (TR) — problem/ihtiyaç odaklı arama; haber gürültüsü için strict
+        ['url' => 'https://news.google.com/rss/search?q=%22yaz%C4%B1l%C4%B1m+aray%C4%B1%C5%9F%C4%B1%22+OR+%22dijitalle%C5%9Fme+sorunu%22+OR+%22otomasyon+ihtiyac%C4%B1%22&hl=tr&gl=TR&ceid=TR:tr', 'source' => 'googlenews-tr', 'region' => 'TR', 'strict' => true],
         // Türkiye — genel
         ['url' => 'https://www.reddit.com/r/Turkey/.rss',        'source' => 'reddit',       'region' => 'TR'],
-        ['url' => 'https://webrazzi.com/feed/',                  'source' => 'webrazzi',     'region' => 'TR'],
-        ['url' => 'https://www.chip.com.tr/rss',                 'source' => 'chip',         'region' => 'TR'],
-        ['url' => 'https://www.donanimhaber.com/rss/tum/',       'source' => 'donanimhaber', 'region' => 'TR'],
+        // Haber siteleri ihtiyaç değil haber başlığı üretir → 'strict' => true:
+        // en az 2 pozitif kalıp + LLM onayı şart (bkz. Scanner::run, gürültü azaltma).
+        ['url' => 'https://webrazzi.com/feed/',                  'source' => 'webrazzi',     'region' => 'TR', 'strict' => true],
+        ['url' => 'https://www.chip.com.tr/rss',                 'source' => 'chip',         'region' => 'TR', 'strict' => true],
+        ['url' => 'https://www.donanimhaber.com/rss/tum/',       'source' => 'donanimhaber', 'region' => 'TR', 'strict' => true],
         // Türkiye — meslek/uzmanlık forumları (yeni konu akışları)
         ['url' => 'https://www.technopat.net/sosyal/forums/-/index.rss', 'source' => 'technopat', 'region' => 'TR', 'sector' => 'Teknoloji / Yazılım'],
         ['url' => 'https://forum.shiftdelete.net/forums/-/index.rss',    'source' => 'sdn-forum', 'region' => 'TR', 'sector' => 'Teknoloji / Yazılım'],
@@ -108,9 +165,9 @@ return [
         ['url' => 'https://doktorlarsitesi.net/feed/',                             'source' => 'doktorlarsitesi', 'region' => 'TR', 'sector' => 'Tıp / Sağlık'],
         ['url' => 'https://ogretmenforum.com/forumlar/-/index.rss',                'source' => 'ogretmenforum',   'region' => 'TR', 'sector' => 'Eğitim / Öğretmenlik'],
         ['url' => 'https://forum.ogretmen.net/latest.rss',                         'source' => 'ogretmen-net',    'region' => 'TR', 'sector' => 'Eğitim / Öğretmenlik'],
-        ['url' => 'https://milliegitimakademileri.com/feed/',                      'source' => 'mea',             'region' => 'TR', 'sector' => 'Eğitim / Öğretmenlik'],
+        ['url' => 'https://milliegitimakademileri.com/feed/',                      'source' => 'mea',             'region' => 'TR', 'sector' => 'Eğitim / Öğretmenlik', 'strict' => true],
         ['url' => 'https://www.egitimhane.com/rss.xml',                            'source' => 'egitimhane',      'region' => 'TR', 'sector' => 'Eğitim / Öğretmenlik'],
-        ['url' => 'https://www.tmmob.org.tr/rss.xml',                              'source' => 'tmmob',           'region' => 'TR', 'sector' => 'Mühendislik'],
+        ['url' => 'https://www.tmmob.org.tr/rss.xml',                              'source' => 'tmmob',           'region' => 'TR', 'sector' => 'Mühendislik', 'strict' => true],
         ['url' => 'https://veterinerhekim.com.tr/feed/',                           'source' => 'veterinerhekim',  'region' => 'TR', 'sector' => 'Veterinerlik'],
         ['url' => 'https://www.gencveteriner.com/index.php?action=.xml;type=rss2', 'source' => 'gencveteriner',   'region' => 'TR', 'sector' => 'Veterinerlik'],
         // R10.net — RSS yok (JS ile yüklenen freelancer/webmaster forumu), kategori
@@ -126,6 +183,11 @@ return [
         ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=481035064/sortby=mostrecent/xml',  'source' => 'appstore-hepsiburada', 'region' => 'TR'],
         ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=1146507477/sortby=mostrecent/xml', 'source' => 'appstore-papara',      'region' => 'TR'],
         ['url' => 'https://itunes.apple.com/tr/rss/customerreviews/id=1003826863/sortby=mostrecent/xml', 'source' => 'appstore-kolayrandevu','region' => 'TR'],
+        // YouTube kanal RSS örneği (key gerektirmez; kanal channel_id ile eklenir,
+        // fetchFeed Atom'u zaten okur). Kanal kimliğini bulup açman yeterli:
+        // ['url' => 'https://www.youtube.com/feeds/videos.xml?channel_id=UCxxxxxxxxxxxx', 'source' => 'youtube-girisim', 'region' => 'TR', 'strict' => true],
+        // GitHub — otomasyon/araç ihtiyacı sinyalleri (public search API, key'siz, rate-limitli).
+        ['url' => 'https://api.github.com/search/issues?q=%22looking+for+a+tool%22+in:title+state:open&sort=reactions&order=desc&per_page=25', 'source' => 'github', 'region' => 'Global', 'type' => 'github'],
     ],
 
     // Türkiye'deki meslek gruplarına özel forum toplulukları — referans amaçlı.

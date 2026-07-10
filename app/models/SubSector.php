@@ -26,13 +26,13 @@ class SubSector extends Model
             "SELECT c.id AS category_id, c.name AS category_name,
                     s.id AS sector_id, s.name AS sector_name,
                     ss.id AS sub_sector_id, ss.name AS sub_sector_name,
-                    COUNT(sig.id) AS signal_count,
-                    SUM(CASE WHEN sig.status = 'olgun_firsat' THEN 1 ELSE 0 END) AS mature_count,
+                    COUNT(p.id) AS signal_count,
+                    SUM(CASE WHEN p.status = 'olgun_firsat' THEN 1 ELSE 0 END) AS mature_count,
                     (SELECT COUNT(*) FROM companies co WHERE co.sub_sector_id = ss.id) AS company_count
              FROM categories c
              LEFT JOIN sectors s ON s.category_id = c.id
              LEFT JOIN sub_sectors ss ON ss.sector_id = s.id
-             LEFT JOIN signals sig ON sig.sub_sector_id = ss.id
+             LEFT JOIN problems p ON p.sub_sector_id = ss.id
              GROUP BY c.id, s.id, ss.id
              ORDER BY c.name, s.name, ss.name"
         );

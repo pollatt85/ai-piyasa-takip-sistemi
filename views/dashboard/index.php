@@ -4,7 +4,7 @@
         <p class="page-sub">Piyasa fırsatı keşif ve proje takip merkezi</p>
     </div>
     <div>
-        <a class="btn" href="<?= url('signals') ?>">+ Manuel Sinyal</a>
+        <a class="btn" href="<?= url('problems') ?>">+ Manuel Problem</a>
         <a class="btn" href="<?= url('projects') ?>">+ Yeni Proje</a>
     </div>
 </div>
@@ -33,25 +33,25 @@
 <div class="grid grid-2 mb">
     <div class="card">
         <h2>
-            ⚡ Yeni Sinyaller
+            ⚡ Yeni Problemler
             <span>
                 <a class="btn btn-sm <?= $radarRange === '24s' ? 'btn-primary' : '' ?>" href="<?= url('?range=24s') ?>">24s</a>
                 <a class="btn btn-sm <?= $radarRange === '7g' ? 'btn-primary' : '' ?>" href="<?= url('?range=7g') ?>">7g</a>
             </span>
         </h2>
         <?php if ($newSignals === []): ?>
-            <p class="page-sub">Bu aralıkta sinyal yok. Soldan tarama başlatabilirsin.</p>
+            <p class="page-sub">Bu aralıkta problem yok. Soldan tarama başlatabilirsin.</p>
         <?php endif; ?>
         <?php foreach ($newSignals as $s): ?>
-        <div class="signal-item" data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
+        <div class="signal-item" data-problem-id="<?= $s['id'] ?>" data-original="<?= e($s['title']) ?>">
             <div class="signal-body">
-                <span class="signal-content js-signal-text" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
+                <a class="signal-content js-signal-text" href="<?= url('problems/' . $s['id']) ?>" title="<?= e($s['title']) ?>"><?= e(mb_substr($s['title'], 0, 90)) ?></a>
                 <div class="signal-meta">
                     <span class="badge badge-<?= strtolower($s['region']) ?>"><?= e($s['region']) ?></span>
                     <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
-                    <span class="badge badge-source"><?= e($s['source']) ?></span>
-                    <span class="badge badge-score">skor <?= $s['score'] ?></span>
-                    <span class="time"><?= timeAgo($s['created_at']) ?></span>
+                    <span class="badge badge-source"><?= (int) $s['mention_count'] ?> kişi</span>
+                    <span class="badge badge-score">skor <?= $s['total_score'] ?></span>
+                    <span class="time"><?= timeAgo($s['last_seen']) ?></span>
                 </div>
             </div>
         </div>
@@ -59,27 +59,27 @@
     </div>
 
     <div class="card">
-        <h2>🎯 Olgunlaşmış Fırsatlar <a class="btn btn-sm" href="<?= url('signals?status=olgun_firsat') ?>">tümü</a></h2>
+        <h2>🎯 Olgunlaşmış Fırsatlar <a class="btn btn-sm" href="<?= url('problems?status=olgun_firsat') ?>">tümü</a></h2>
         <?php if ($matureSignals === []): ?>
             <p class="page-sub">Henüz olgunlaşan fırsat yok. Skor eşiği: <?= config()['score']['threshold'] ?>.</p>
         <?php endif; ?>
         <?php foreach ($matureSignals as $s): ?>
-        <div class="signal-item" data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
+        <div class="signal-item" data-problem-id="<?= $s['id'] ?>" data-original="<?= e($s['title']) ?>">
             <div class="signal-body">
-                <span class="signal-content js-signal-text" title="<?= e($s['content']) ?>"><?= e(mb_substr($s['content'], 0, 80)) ?></span>
+                <a class="signal-content js-signal-text" href="<?= url('problems/' . $s['id']) ?>" title="<?= e($s['title']) ?>"><?= e(mb_substr($s['title'], 0, 80)) ?></a>
                 <div class="signal-meta">
-                    <span class="badge badge-score">skor <?= $s['score'] ?></span>
+                    <span class="badge badge-score">skor <?= $s['total_score'] ?></span>
                     <span class="badge badge-<?= strtolower($s['region']) ?>"><?= e($s['region']) ?></span>
                     <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
                     <?php if ($s['sector_name']): ?><span class="badge badge-source"><?= e($s['sector_name']) ?></span><?php endif; ?>
                 </div>
             </div>
             <div class="signal-actions">
-                <form class="inline-form" method="post" action="<?= url('signals/' . $s['id'] . '/favorite') ?>">
+                <form class="inline-form" method="post" action="<?= url('problems/' . $s['id'] . '/favorite') ?>">
                     <input type="hidden" name="back" value="">
                     <button class="btn-star <?= $s['is_favorite'] ? 'on' : '' ?>" title="Favori">★</button>
                 </form>
-                <form class="inline-form" method="post" action="<?= url('signals/' . $s['id'] . '/to-project') ?>">
+                <form class="inline-form" method="post" action="<?= url('problems/' . $s['id'] . '/to-project') ?>">
                     <button class="btn btn-sm btn-primary">Projeye Çevir</button>
                 </form>
             </div>
@@ -91,22 +91,22 @@
 <!-- Favoriler + Grafikler -->
 <div class="grid grid-2 mb">
     <div class="card">
-        <h2>★ Favoriler <a class="btn btn-sm" href="<?= url('signals?favorites=1') ?>">tümü</a></h2>
+        <h2>★ Favoriler <a class="btn btn-sm" href="<?= url('problems?favorites=1') ?>">tümü</a></h2>
         <?php if ($favorites === []): ?>
             <p class="page-sub">Favori fırsat yok. Fırsat kartındaki ★ ile ekleyebilirsin.</p>
         <?php endif; ?>
         <?php foreach ($favorites as $s): ?>
-        <div class="signal-item" data-signal-id="<?= $s['id'] ?>" data-original="<?= e($s['content']) ?>">
+        <div class="signal-item" data-problem-id="<?= $s['id'] ?>" data-original="<?= e($s['title']) ?>">
             <div class="signal-body">
-                <span class="signal-content js-signal-text"><?= e(mb_substr($s['content'], 0, 90)) ?></span>
+                <a class="signal-content js-signal-text" href="<?= url('problems/' . $s['id']) ?>"><?= e(mb_substr($s['title'], 0, 90)) ?></a>
                 <div class="signal-meta">
-                    <span class="badge badge-score">skor <?= $s['score'] ?></span>
+                    <span class="badge badge-score">skor <?= $s['total_score'] ?></span>
                     <span class="badge badge-<?= e($s['status']) ?>"><?= $s['status'] === 'olgun_firsat' ? 'olgun fırsat' : 'ham' ?></span>
                     <?php if ($s['region'] === 'Global'): ?><button type="button" class="btn-translate" title="Türkçeye çevir">TR</button><?php endif; ?>
                 </div>
             </div>
             <div class="signal-actions">
-                <form class="inline-form" method="post" action="<?= url('signals/' . $s['id'] . '/to-project') ?>">
+                <form class="inline-form" method="post" action="<?= url('problems/' . $s['id'] . '/to-project') ?>">
                     <button class="btn btn-sm">Projeye Çevir</button>
                 </form>
             </div>
@@ -115,7 +115,7 @@
     </div>
 
     <div class="card">
-        <h2>📊 Sektör Dağılımı (sinyal)</h2>
+        <h2>📊 Sektör Dağılımı (fırsat)</h2>
         <div class="chart-box"><canvas id="sectorChart"></canvas></div>
     </div>
 </div>

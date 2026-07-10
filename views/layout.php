@@ -3,7 +3,7 @@ declare(strict_types=1);
 $reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $nav = [
     '' => ['Dashboard', '◈'],
-    'signals' => ['Sinyaller', '⚡'],
+    'problems' => ['Fırsatlar', '⚡'],
     'projects' => ['Projeler', '▤'],
     'market' => ['Piyasa Haritası', '◉'],
     'kaynaklar' => ['Kaynaklar', '📚'],
@@ -35,7 +35,7 @@ $flashData = flash();
         <nav>
             <?php foreach ($nav as $seg => [$label, $icon]):
                 $isActive = $seg === ''
-                    ? !preg_match('#/(signals|projects|market|kaynaklar|logs)#', $reqPath)
+                    ? !preg_match('#/(problems|projects|market|kaynaklar|logs)#', $reqPath)
                     : (bool) preg_match('#/' . $seg . '(/|$)#', $reqPath);
             ?>
             <a href="<?= url($seg) ?>" class="<?= $isActive ? 'active' : '' ?>">

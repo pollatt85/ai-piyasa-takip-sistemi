@@ -37,23 +37,63 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS companies (
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 )");
 
-$pdo->exec("CREATE TABLE IF NOT EXISTS signals (
+// Eski haber-toplayıcı modeli kaldırıldı (yeniden tasarım — bkz. plan). Problem
+// keşif modeline geçildi: aynı problem tek "problems" kaydında kümelenir, ham
+// kanıtlar "problem_mentions"da tutulur. Kullanıcı onayıyla eski signals sıfırlanır.
+$pdo->exec("DROP TABLE IF EXISTS signals");
+
+// problems = kümelenmiş problem/fırsat kaydı (50 kişi → tek kayıt). AI analizi
+// (12 boyut) ve fırsat metinleri bu satırda tutulur.
+$pdo->exec("CREATE TABLE IF NOT EXISTS problems (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sub_sector_id INTEGER REFERENCES sub_sectors(id) ON DELETE SET NULL,
+    region TEXT NOT NULL DEFAULT 'TR',
+    cluster_key TEXT NOT NULL DEFAULT '',
+    title TEXT NOT NULL,
+    content_tr TEXT,
+    why_summary TEXT NOT NULL DEFAULT '',
+    mvp_suggestion TEXT NOT NULL DEFAULT '',
+    mvp_weeks INTEGER,
+    mention_count INTEGER NOT NULL DEFAULT 1,
+    source_variety INTEGER NOT NULL DEFAULT 1,
+    sources TEXT NOT NULL DEFAULT '',
+    -- 12 AI boyutu: 0-100 puanlar + metin alanları (revenue/frequency/trend)
+    demand_score INTEGER,
+    competition_score INTEGER,
+    ai_solvability INTEGER,
+    automation_fit INTEGER,
+    technical_difficulty INTEGER,
+    revenue_potential TEXT NOT NULL DEFAULT '',
+    subscription_fit INTEGER,
+    local_opportunity INTEGER,
+    global_opportunity INTEGER,
+    repeat_frequency TEXT NOT NULL DEFAULT '',
+    trend_direction TEXT NOT NULL DEFAULT '',
+    manual_score INTEGER NOT NULL DEFAULT 0,
+    total_score INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'ham',
+    is_favorite INTEGER NOT NULL DEFAULT 0,
+    first_seen TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    last_seen TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+)");
+
+// problem_mentions = tekil ham kanıt (hangi kaynak, hangi URL, ne zaman).
+// content_hash UNIQUE: aynı içerik tekrar taranırsa mention sayısı şişmez.
+$pdo->exec("CREATE TABLE IF NOT EXISTS problem_mentions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    problem_id INTEGER NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
     source TEXT NOT NULL DEFAULT 'manuel',
     source_url TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL,
     content_tr TEXT,
     content_hash TEXT NOT NULL UNIQUE,
     region TEXT NOT NULL DEFAULT 'TR',
-    repeat_count INTEGER NOT NULL DEFAULT 1,
-    source_variety INTEGER NOT NULL DEFAULT 1,
-    manual_score INTEGER NOT NULL DEFAULT 0,
-    score INTEGER NOT NULL DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'ham',
-    is_favorite INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 )");
+
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_problems_cluster ON problems(sub_sector_id, region, cluster_key)");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_mentions_problem ON problem_mentions(problem_id)");
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,13 +130,6 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS logs (
     ref_id INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 )");
-
-// --- Mevcut DB'ler için idempotent kolon eklemeleri (ALTER ... IF NOT EXISTS yok) ---
-$signalCols = array_column($pdo->query("PRAGMA table_info(signals)")->fetchAll(), 'name');
-if (!in_array('content_tr', $signalCols, true)) {
-    $pdo->exec('ALTER TABLE signals ADD COLUMN content_tr TEXT');
-    echo "signals.content_tr kolonu eklendi.\n";
-}
 
 // --- Seed: başlangıç hiyerarşisi (yalnızca boşsa) ---
 $count = (int) $pdo->query('SELECT COUNT(*) FROM categories')->fetchColumn();

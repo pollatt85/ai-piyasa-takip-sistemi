@@ -5,7 +5,7 @@ class DashboardController extends Controller
 {
     public function index(): void
     {
-        $signal = new Signal();
+        $problem = new Problem();
         $project = new Project();
         $task = new Task();
         $tick = new Tick();
@@ -16,18 +16,18 @@ class DashboardController extends Controller
         $this->view('dashboard/index', [
             'title' => 'Dashboard',
             // Üst özet kartları
-            'todaySignals' => $signal->todayCount(),
-            'weekMature' => $signal->weekMatureCount(),
+            'todaySignals' => $problem->todayCount(),
+            'weekMature' => $problem->weekMatureCount(),
             'activeProjects' => $project->activeCount(),
             'weeklyCompletion' => $task->weeklyCompletion(),
             // Fırsat Radarı
             'radarRange' => $radarRange,
-            'newSignals' => $signal->filtered(['since' => $since, 'limit' => 8]),
-            'matureSignals' => $signal->filtered(['status' => 'olgun_firsat', 'limit' => 8]),
-            'favorites' => $signal->filtered(['favorites' => true, 'limit' => 8]),
+            'newSignals' => $problem->filtered(['since' => $since, 'limit' => 8]),
+            'matureSignals' => $problem->filtered(['status' => 'olgun_firsat', 'limit' => 8]),
+            'favorites' => $problem->filtered(['favorites' => true, 'limit' => 8]),
             // Piyasa haritası + grafikler
             'tree' => (new SubSector())->tree(),
-            'sectorDistribution' => $signal->sectorDistribution(),
+            'sectorDistribution' => $problem->sectorDistribution(),
             'weeklyTicks' => $tick->weeklySeries(),
             // Kanban + görevler + aktivite
             'kanban' => $project->kanban(),
