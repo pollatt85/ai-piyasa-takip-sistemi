@@ -30,6 +30,7 @@ class HtmlListSource extends SourceAdapter
                 'title' => trim($a->textContent),
                 'summary' => '',
                 'link' => trim($a->getAttribute('href')),
+                'date' => null, // HTML listede tarih yok → yaş filtresine takılmaz
             ];
         }
         return $items;

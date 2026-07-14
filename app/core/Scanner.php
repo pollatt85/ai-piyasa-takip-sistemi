@@ -50,8 +50,18 @@ class Scanner
 
             $strict = !empty($feed['strict']);
 
+            $maxAgeDays = (int) ($cfg['max_age_days'] ?? 365);
+            $ageCutoff = time() - $maxAgeDays * 86400;
+
             foreach ($items as $item) {
                 $stats['fetched']++;
+
+                // 0) Yaş filtresi — max_age_days'ten eski problem/fırsatı AI'a hiç gönderme
+                // (token tasarrufu). Tarih yoksa (R10 HTML vb.) elenmez. Atom'da 'published'
+                // = sorulma tarihi kullanıldığından "eski ama bugün aktif" soru da elenir.
+                if (!empty($item['date']) && $item['date'] < $ageCutoff) {
+                    continue;
+                }
 
                 // 1) Kayıt öncesi kalite filtresi — gürültü DB'ye hiç girmez.
                 if (!$pipeline->passes($item, $feed)) {

@@ -127,6 +127,11 @@ return [
         ],
     ],
 
+    // Yaş filtresi: sorulma/yayın tarihi bu kadar günden eski item'lar taramada
+    // AI'a hiç gönderilmeden elenir (bkz. Scanner). Tarihi olmayan kaynaklar (R10
+    // HTML) etkilenmez. 365 = son 12 ay. Kısaltmak daha güncel ama daha az sinyal.
+    'max_age_days' => 365,
+
     // Ücretsiz, API key gerektirmeyen kaynaklar (RSS + Reddit RSS).
     // Ücretli/kotalı kaynaklar (Google Maps, Custom Search) bilinçli olarak dışarıda.
     // Her feed 'type' alabilir: 'rss' (varsayılan, RSS 2.0 + Atom), 'html_list'
@@ -188,6 +193,31 @@ return [
         // ['url' => 'https://www.youtube.com/feeds/videos.xml?channel_id=UCxxxxxxxxxxxx', 'source' => 'youtube-girisim', 'region' => 'TR', 'strict' => true],
         // GitHub — otomasyon/araç ihtiyacı sinyalleri (public search API, key'siz, rate-limitli).
         ['url' => 'https://api.github.com/search/issues?q=%22looking+for+a+tool%22+in:title+state:open&sort=reactions&order=desc&per_page=25', 'source' => 'github', 'region' => 'Global', 'type' => 'github'],
+
+        // ── Parametrik / sorgu-şablonlu kaynaklar (2026-07-14'te tek tek doğrulandı) ──
+        // "Tek tek forum aramak yerine sorgu = sınırsız kaynak" mantığı. Hepsi RSS/Atom,
+        // ücretsiz ve key'siz; mevcut RssSource adapter'ı işler.
+
+        // Stack Exchange — ihtiyaç sinyali en yüksek kaynaklar (API, sort=creation, key'siz).
+        // RSS /feeds ucu son aktiviteye göre sıralı olduğundan eski (bugün aktif) sorular
+        // döndürür ve yaş filtresine takılır; bu yüzden API'den SORULMA tarihine göre çekilir
+        // (bkz. StackExchangeSource). Software Recommendations: "şu işi yapan yazılım var mı"
+        // = saf ürün/otomasyon ihtiyacı, hedefli olduğu için strict değil.
+        ['url' => 'https://api.stackexchange.com/2.3/questions?order=desc&sort=creation&site=softwarerecs&pagesize=30&filter=withbody',                'source' => 'softwarerecs',  'region' => 'Global', 'type' => 'stackexchange'],
+        ['url' => 'https://api.stackexchange.com/2.3/questions?order=desc&sort=creation&site=webapps&pagesize=30&filter=withbody',                     'source' => 'webapps-se',    'region' => 'Global', 'type' => 'stackexchange'],
+        ['url' => 'https://api.stackexchange.com/2.3/questions?order=desc&sort=creation&tagged=automation&site=stackoverflow&pagesize=30&filter=withbody', 'source' => 'so-automation', 'region' => 'Global', 'type' => 'stackexchange', 'strict' => true],
+
+        // Reddit search RSS — subreddit avlamak yerine niyet sorgusu (gürültü için strict).
+        ['url' => 'https://www.reddit.com/search.rss?q=%22is+there+a+tool%22&sort=new',     'source' => 'reddit-search', 'region' => 'Global', 'strict' => true],
+        ['url' => 'https://www.reddit.com/search.rss?q=%22looking+for+software%22&sort=new', 'source' => 'reddit-search', 'region' => 'Global', 'strict' => true],
+
+        // Hacker News keyword (hnrss.org, key'siz; ara sıra 502 verir → Scanner retry karşılar).
+        ['url' => 'https://hnrss.org/newest?q=%22looking+for+a+tool%22', 'source' => 'hn-search', 'region' => 'Global', 'strict' => true],
+        ['url' => 'https://hnrss.org/newest?q=%22manual+process%22',     'source' => 'hn-search', 'region' => 'Global', 'strict' => true],
+
+        // Google News RSS (TR) — sektör bazlı otomasyon/yazılım ihtiyacı sorguları (haber gürültüsü için strict).
+        ['url' => 'https://news.google.com/rss/search?q=%22muhasebe+program%C4%B1+ar%C4%B1yorum%22+OR+%22%C3%B6n+muhasebe+yaz%C4%B1l%C4%B1m%C4%B1%22+OR+%22e-fatura+sorunu%22&hl=tr&gl=TR&ceid=TR:tr', 'source' => 'googlenews-tr', 'region' => 'TR', 'strict' => true, 'sector' => 'Muhasebe / Mali Müşavirlik'],
+        ['url' => 'https://news.google.com/rss/search?q=%22klinik+yaz%C4%B1l%C4%B1m%C4%B1%22+OR+%22hasta+takip+program%C4%B1%22+OR+%22randevu+sistemi+sorunu%22&hl=tr&gl=TR&ceid=TR:tr', 'source' => 'googlenews-tr', 'region' => 'TR', 'strict' => true, 'sector' => 'Tıp / Sağlık'],
     ],
 
     // Türkiye'deki meslek gruplarına özel forum toplulukları — referans amaçlı.

@@ -15,6 +15,7 @@ class SourceRegistry
         'rss' => RssSource::class,
         'html_list' => HtmlListSource::class,
         'github' => GithubSource::class,
+        'stackexchange' => StackExchangeSource::class,
     ];
 
     /** feed'in type'ına uygun adapter; bilinmeyen/eksik tip → null (feed atlanır). */

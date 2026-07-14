@@ -36,6 +36,7 @@ class GithubSource extends SourceAdapter
                 'title' => trim((string) ($it['title'] ?? '')),
                 'summary' => trim(mb_substr(strip_tags((string) ($it['body'] ?? '')), 0, 600)),
                 'link' => trim((string) ($it['html_url'] ?? '')),
+                'date' => isset($it['created_at']) ? (strtotime((string) $it['created_at']) ?: null) : null,
             ];
         }
         return $items;
